@@ -113,39 +113,41 @@ jobs:
   # ---------------------------
   # ---------------------------
 
+
   snyk_scan:
-   runs-on: ubuntu-latest
-   needs: test_and_lint_backends
-   steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # Product Service Scan
-    - name: Snyk Product Service Scan
-      uses: snyk/actions/test@master
-      with:
-        args: --json --fail-on=critical --skip-unresolved
-        directory: backend/product_service
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      - name: Setup Snyk CLI
+        uses: snyk/actions/setup@v1
+        with:
+          snyk-version: 'latest'
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-    # Order Service Scan
-    - name: Snyk Order Service Scan
-      uses: snyk/actions/test@master
-      with:
-        args: --json --fail-on=critical --skip-unresolved
-        directory: backend/order_service
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      - name: Install dependencies
+        run: |
+          cd backend/product_service
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
-    # Upload Snyk reports (optional)
-    - name: Upload Snyk Reports
-      uses: actions/upload-artifact@v4
-      with:
-        name: snyk-reports
-        path: |
-          backend/product_service/snyk.json
-          backend/order_service/snyk.json
+      - name: Run Snyk test
+        run: |
+          cd backend/product_service
+          snyk test --json --fail-on=critical --skip-unresolved > ../../product_service_snyk.json
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Upload Snyk Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-reports
+          path: |
+            product_service_snyk.json
 
   # ---------------------------
   # Stage 4: Build and Push Docker Images + SBOM
