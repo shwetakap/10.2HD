@@ -111,21 +111,21 @@ jobs:
   # ---------------------------
   # Stage 3: Snyk Vulnerability Scan
   # ---------------------------
-   -name: Snyk Product Service Scan
-    run: |
-      cd backend/product_service
-      pip install -r requirements.txt
-      snyk test --json
-    env:
-    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+       -  name: Snyk Product Service Scan
+        run: |
+         cd backend/product_service
+         pip install -r requirements.txt
+         snyk test --json
+        env:
+         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-   -name: Snyk Order Service Scan
-    run: |
-     cd backend/order_service
-     pip install -r requirements.txt
-     snyk test --json
-    env:
-    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+       - name: Snyk Order Service Scan
+        run: |
+          cd backend/order_service
+          pip install -r requirements.txt
+          snyk test --json
+        env:
+         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
   # ---------------------------
   # Stage 4: Build and Push Docker Images + SBOM
