@@ -111,22 +111,36 @@ jobs:
   # ---------------------------
   # Stage 3: Snyk Vulnerability Scan
   # ---------------------------
- -  name: Snyk Product Service Scan
-    run: |
-         cd backend/product_service
-         pip install -r requirements.txt
-         snyk test --json
-    env:
-      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+snyk_scan:
+  runs-on: ubuntu-latest
+  needs: test_and_lint_backends
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
- -  name: Snyk Order Service Scan
-    run: |
-          cd backend/order_service
-          pip install -r requirements.txt
-          snyk test --json
-    env:
-      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    # ---------------------------
+    # Product Service Scan
+    # ---------------------------
+    - name: Snyk Product Service Scan
+      run: |
+        cd backend/product_service
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        snyk test --json --fail-on=critical > ../../product_service_snyk.json
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
+    # ---------------------------
+    # Order Service Scan
+    # ---------------------------
+    - name: Snyk Order Service Scan
+      run: |
+        cd backend/order_service
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        snyk test --json --fail-on=critical > ../../order_service_snyk.json
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
   # ---------------------------
   # Stage 4: Build and Push Docker Images + SBOM
   # ---------------------------
