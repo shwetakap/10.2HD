@@ -114,9 +114,9 @@ jobs:
   # ---------------------------
   
   snyk_scan:
-  runs-on: ubuntu-latest
-  needs: test_and_lint_backends
-  steps:
+   runs-on: ubuntu-latest
+   needs: test_and_lint_backends
+   steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
