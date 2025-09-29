@@ -118,11 +118,18 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+ 
+      # Setup Python
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
     # Setup Snyk CLI
     - name: Setup Snyk CLI
       uses: snyk/actions/setup@master
       with:
-        version: 'latest'
+        snyk-version: 'latest'
 
     # Product Service Scan
     - name: Snyk Product Service Scan
