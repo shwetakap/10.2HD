@@ -129,23 +129,21 @@ jobs:
 
     # Product Service Scan
     - name: Snyk Product Service Scan
-      run: |
-        cd backend/product_service
-        pip install --upgrade pip
-        pip install -r requirements.txt
-        snyk test --json --fail-on=critical --skip-unresolved > ../../product_service_snyk.json
+      uses: snyk/actions/test@master
+      with:
+       args: --json --fail-on=critical --skip-unresolved
+      directory: backend/product_service
       env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
     # Order Service Scan
     - name: Snyk Order Service Scan
-      run: |
-        cd backend/order_service
-        pip install --upgrade pip
-        pip install -r requirements.txt
-        snyk test --json --fail-on=critical --skip-unresolved > ../../order_service_snyk.json
+      uses: snyk/actions/test@master
+      with:
+       args: --json --fail-on=critical --skip-unresolved
+      directory: backend/product_service
       env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
     # Upload Snyk reports (optional)
     - name: Upload Snyk Reports
