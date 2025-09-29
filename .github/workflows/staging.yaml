@@ -1,11 +1,11 @@
 name: Staging Deployment
 
 on:
+  push:
+    branches:
+      - testing
   workflow_dispatch:
-  workflow_run:
-    workflows: ["Backend CI - Test, Build, Scan and Push Images to ACR"]
-    types:
-      - completed
+
 
 env:
   TF_WORKING_DIR: ./infra   # Terraform folder
@@ -33,13 +33,13 @@ jobs:
       - name: Terraform Apply
         working-directory: ${{ env.TF_WORKING_DIR }}
         env:
-         TF_VAR_client_id: ${{ secrets.AZURE_CLIENT_ID }}
-        TF_VAR_client_secret: ${{ secrets.AZURE_CLIENT_SECRET }}
-        TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
-        TF_VAR_resource_group: ${{ env.RESOURCE_GROUP }}
-        TF_VAR_aks_name: ${{ env.AKS_NAME }}
-        TF_VAR_location: ${{ env.LOCATION }}
+          TF_VAR_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+          TF_VAR_client_secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+          TF_VAR_resource_group: ${{ env.RESOURCE_GROUP }}
+          TF_VAR_aks_name: ${{ env.AKS_NAME }}
+          TF_VAR_location: ${{ env.LOCATION }}
         run: terraform apply -auto-approve
 
   deploy_services:
@@ -64,21 +64,20 @@ jobs:
           IMAGE_TAG=${{ github.event.workflow_run.outputs.IMAGE_TAG }}
           sed -i "s|image: .*/product_service:.*|image: myacr.azurecr.io/product_service:$IMAGE_TAG|" k8s/product-service.yaml
           sed -i "s|image: .*/order_service:.*|image: myacr.azurecr.io/order_service:$IMAGE_TAG|" k8s/order-service.yaml
-          sed -i "s|image: .*/customer_service:.*|image: myacr.azurecr.io/customer_service:$IMAGE_TAG|" k8s/customer-service.yaml
-
+          
       - name: Deploy backend infrastructure
         run: |
           kubectl apply -f k8s/configmaps.yaml
           kubectl apply -f k8s/secrets.yaml
           kubectl apply -f k8s/product-db.yaml
           kubectl apply -f k8s/order-db.yaml
-          kubectl apply -f k8s/customer-db.yaml
+          
 
       - name: Deploy backend microservices
         run: |
           kubectl apply -f k8s/product-service.yaml
           kubectl apply -f k8s/order-service.yaml
-          kubectl apply -f k8s/customer-service.yaml
+          
 
       - name: Wait for Services to be Ready
         run: |
@@ -110,11 +109,11 @@ jobs:
       - name: Terraform Destroy
         working-directory: ${{ env.TF_WORKING_DIR }}
         env:
-            TF_VAR_client_id: ${{ secrets.AZURE_CLIENT_ID }}
-            TF_VAR_client_secret: ${{ secrets.AZURE_CLIENT_SECRET }}
-            TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-            TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
-            TF_VAR_resource_group: ${{ env.RESOURCE_GROUP }}
-            TF_VAR_aks_name: ${{ env.AKS_NAME }}
-            TF_VAR_location: ${{ env.LOCATION }}
+          TF_VAR_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+          TF_VAR_client_secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+          TF_VAR_resource_group: ${{ env.RESOURCE_GROUP }}
+          TF_VAR_aks_name: ${{ env.AKS_NAME }}
+          TF_VAR_location: ${{ env.LOCATION }}
         run: terraform destroy -auto-approve

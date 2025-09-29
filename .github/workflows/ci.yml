@@ -121,7 +121,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Setup Snyk CLI
-      uses: snyk/actions/setup@v3
+      uses: snyk/actions/setup@master
       with:
         snyk-version: 'latest'  # or specify a version
       env:
