@@ -134,7 +134,7 @@ jobs:
        args: --json --fail-on=critical --skip-unresolved
        directory: backend/product_service
       env:
-      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
     # Order Service Scan
     - name: Snyk Order Service Scan
@@ -143,7 +143,7 @@ jobs:
        args: --json --fail-on=critical --skip-unresolved
        directory: backend/product_service
       env:
-      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
     # Upload Snyk reports (optional)
     - name: Upload Snyk Reports
