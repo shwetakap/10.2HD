@@ -132,7 +132,7 @@ jobs:
       uses: snyk/actions/test@master
       with:
        args: --json --fail-on=critical --skip-unresolved
-      directory: backend/product_service
+       directory: backend/product_service
       env:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
@@ -141,7 +141,7 @@ jobs:
       uses: snyk/actions/test@master
       with:
        args: --json --fail-on=critical --skip-unresolved
-      directory: backend/product_service
+       directory: backend/product_service
       env:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
