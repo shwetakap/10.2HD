@@ -141,7 +141,7 @@ jobs:
      
       # Upload Snyk reports (optional)
       - name: Upload Snyk Reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: snyk-reports
           path: |
