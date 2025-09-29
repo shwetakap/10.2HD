@@ -112,12 +112,20 @@ jobs:
   # Stage 3: Snyk Vulnerability Scan
   # ---------------------------
   # ---------------------------
+  
   snyk_scan:
-    runs-on: ubuntu-latest
-    needs: test_and_lint_backends
-    steps:
+  runs-on: ubuntu-latest
+  needs: test_and_lint_backends
+  steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+
+    - name: Setup Snyk CLI
+      uses: snyk/actions/setup@v3
+      with:
+        snyk-version: 'latest'  # or specify a version
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
     # Product Service Scan
     - name: Snyk Product Service Scan
@@ -147,6 +155,7 @@ jobs:
         path: |
           product_service_snyk.json
           order_service_snyk.json
+
    
 
   # ---------------------------

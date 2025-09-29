@@ -9,7 +9,7 @@ on:
 
 env:
   TF_WORKING_DIR: ./infra   # Terraform folder
-  RESOURCE_GROUP: sk-hd-staging
+  RESOURCE_GROUP: sk-hd
   AKS_NAME: skhd-aks
   LOCATION: australiaeast
 
