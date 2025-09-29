@@ -138,7 +138,7 @@ jobs:
       - name: Run Snyk test
         run: |
           cd backend/product_service
-          snyk test --json --fail-on=critical --skip-unresolved > ../../product_service_snyk.json
+          snyk test --json  --skip-unresolved > ../../product_service_snyk.json
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
