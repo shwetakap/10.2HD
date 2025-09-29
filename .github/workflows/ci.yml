@@ -92,7 +92,7 @@ jobs:
         run: pytest tests --maxfail=1 --disable-warnings -q
 
   # ---------------------------
-  # Stage 2: SonarQube Code Analysis
+  # Stage 2: SonarQube Cosde Analysis
   # ---------------------------
   sonarqube_analysis:
     runs-on: ubuntu-latest
