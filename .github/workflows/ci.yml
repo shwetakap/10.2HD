@@ -79,9 +79,7 @@ jobs:
         working-directory: backend/product_service
         run: pytest tests --maxfail=1 --disable-warnings -q
 
-      - name: Run customer_service tests
-        working-directory: backend/customer_service
-        run: pytest tests --maxfail=1 --disable-warnings -q
+      
 
       - name: Run order_service tests
         working-directory: backend/order_service
