@@ -132,7 +132,7 @@ jobs:
     name: Destroy Staging Resources
     runs-on: ubuntu-latest
     needs: deploy_services
-    if: github.event_name == 'workflow_dispatch'
+    if: always()
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
