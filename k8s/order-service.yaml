@@ -1,62 +1,153 @@
-# week08/k8s/order-service.yaml
+name: CD - Deploy Backend Services to AKS (Staging + Terraform + Image Update)
 
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: order-service
-  labels:
-    app: order-service
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: order-service
-  template:
-    metadata:
-      labels:
-        app: order-service
-    spec:
-      containers:
-      - name: order-service-container
-        image: skhdaks.azurecr.io/order_service:latest
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8000
+on:
+  workflow_run:
+    workflows: ["Backend CI - Test, Build and Push Images to ACR"]
+    types:
+      - completed
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      aks_cluster_name:
+        description: 'Name of the AKS Cluster to deploy to'
+        required: true
+        default: 'skhd-aks'
+      aks_resource_group:
+        description: 'Resource Group of the AKS Cluster'
+        required: true
+        default: 'sk-hd'
+      aks_acr_name:
+        description: 'Name of ACR'
+        required: true
+        default: 'skhdaks'
+
+env:
+  TF_WORKING_DIR: ./infra
+  RESOURCE_GROUP: sk-hd
+  AKS_NAME: skhd-aks
+  LOCATION: australiaeast
+  ACR_NAME: skhdaks
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  terraform_apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    outputs:
+      AKS_NAME: ${{ steps.set_aks.outputs.aks_name }}
+      RESOURCE_GROUP: ${{ steps.set_aks.outputs.resource_group }}
+      ACR_NAME: ${{ steps.set_aks.outputs.acr_name }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.4
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      - name: Import Existing Resources and Apply
+        working-directory: ${{ env.TF_WORKING_DIR }}
         env:
-        - name: POSTGRES_HOST
-          value: order-db
-        - name: POSTGRES_DB
-          valueFrom:
-            configMapKeyRef:
-              name: ecomm-config-w08e1
-              key: ORDERS_DB_NAME
-        - name: POSTGRES_USER
-          valueFrom:
-            secretKeyRef:
-              name: ecomm-secrets-w08e1
-              key: POSTGRES_USER
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: ecomm-secrets-w08e1
-              key: POSTGRES_PASSWORD
-        - name: PRODUCT_SERVICE_URL
-          valueFrom:
-            configMapKeyRef:
-              name: ecomm-config-w08e1
-              key: PRODUCT_SERVICE_URL
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: order-service
-  labels:
-    app: order-service
-spec:
-  selector:
-    app: order-service
-  ports:
-    - protocol: TCP
-      port: 8001
-      targetPort: 8000
-  type: LoadBalancer
+          TF_VAR_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+          TF_VAR_client_secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+          TF_VAR_resource_group: ${{ env.RESOURCE_GROUP }}
+          TF_VAR_aks_name: ${{ env.AKS_NAME }}
+          TF_VAR_acr_name: ${{ env.ACR_NAME }}
+          TF_VAR_location: ${{ env.LOCATION }}
+        run: |
+          terraform import azurerm_resource_group.rg \
+            /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }} || true
+          terraform import azurerm_container_registry.acr \
+            /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ContainerRegistry/registries/${{ env.ACR_NAME }} || true
+          terraform import azurerm_kubernetes_cluster.aks \
+            /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ContainerService/managedClusters/${{ env.AKS_NAME }} || true
+          terraform apply -auto-approve
+
+      - name: Set outputs
+        id: set_aks
+        run: |
+          echo "aks_name=${{ env.AKS_NAME }}" >> $GITHUB_OUTPUT
+          echo "resource_group=${{ env.RESOURCE_GROUP }}" >> $GITHUB_OUTPUT
+          echo "acr_name=${{ env.ACR_NAME }}" >> $GITHUB_OUTPUT
+
+  deploy_backend:
+    name: Deploy Backend to AKS
+    runs-on: ubuntu-latest
+    needs: terraform_apply
+    environment: Staging
+
+    env:
+      AKS_CLUSTER_NAME: ${{ needs.terraform_apply.outputs.AKS_NAME }}
+      AKS_RESOURCE_GROUP: ${{ needs.terraform_apply.outputs.RESOURCE_GROUP }}
+      AKS_ACR_NAME: ${{ needs.terraform_apply.outputs.ACR_NAME }}
+      IMAGE_TAG: ${{ env.IMAGE_TAG }}
+
+    outputs:
+      PRODUCT_API_IP: ${{ steps.get_ips.outputs.external_product_ip }}
+      ORDER_API_IP: ${{ steps.get_ips.outputs.external_order_ip }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+
+      - name: Set Kubernetes context
+        run: |
+          az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --overwrite-existing
+
+      - name: Attach ACR to AKS
+        run: |
+          az aks update --name $AKS_CLUSTER_NAME --resource-group $AKS_RESOURCE_GROUP --attach-acr $AKS_ACR_NAME
+
+      - name: Update product-service image and apply
+        run: |
+          sed -i "s|image: .*|image: ${AKS_ACR_NAME}.azurecr.io/product_service:${IMAGE_TAG}|" 10.2HD/k8s/product-service.yaml
+          kubectl apply -f 10.2HD/k8s/product-service.yaml
+
+      - name: Update order-service image and apply
+        run: |
+          sed -i "s|image: .*|image: ${AKS_ACR_NAME}.azurecr.io/order_service:${IMAGE_TAG}|" 10.2HD/k8s/order-service.yaml
+          kubectl apply -f 10.2HD/k8s/order-service.yaml
+
+      - name: Wait for LoadBalancer IPs
+        run: |
+          PRODUCT_IP=""
+          ORDER_IP=""
+          for i in $(seq 1 60); do
+            PRODUCT_IP=$(kubectl get service product-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            ORDER_IP=$(kubectl get service order-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            if [[ -n "$PRODUCT_IP" && -n "$ORDER_IP" ]]; then
+              break
+            fi
+            sleep 5
+          done
+          if [[ -z "$PRODUCT_IP" || -z "$ORDER_IP" ]]; then
+            echo "Error: LoadBalancer IPs not assigned"
+            exit 1
+          fi
+          echo "PRODUCT_IP=$PRODUCT_IP" >> $GITHUB_ENV
+          echo "ORDER_IP=$ORDER_IP" >> $GITHUB_ENV
+
+      - name: Set outputs
+        id: get_ips
+        run: |
+          echo "external_product_ip=$PRODUCT_IP" >> $GITHUB_OUTPUT
+          echo "external_order_ip=$ORDER_IP" >> $GITHUB_OUTPUT
+
+      - name: Azure Logout
+        run: az logout
