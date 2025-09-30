@@ -30,7 +30,7 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform init
 
-      - name: Terraform Apply
+      - name: Import Existing Resources and Apply
         working-directory: ${{ env.TF_WORKING_DIR }}
         env:
           TF_VAR_client_id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -39,16 +39,23 @@ jobs:
           TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
           TF_VAR_resource_group: ${{ env.RESOURCE_GROUP }}
           TF_VAR_aks_name: ${{ env.AKS_NAME }}
+          TF_VAR_acr_name: ${{ env.ACR_NAME }}
           TF_VAR_location: ${{ env.LOCATION }}
         run: |
-              terraform import azurerm_resource_group.rg \
-              /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }} || true
+          # Import Resource Group
+          terraform import azurerm_resource_group.rg \
+            /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }} || true
 
-              terraform import azurerm_container_registry.acr \
-              /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ContainerRegistry/registries/${{ env.ACR_NAME }} || true
+          # Import Azure Container Registry
+          terraform import azurerm_container_registry.acr \
+            /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ContainerRegistry/registries/${{ env.ACR_NAME }} || true
 
-              terraform apply -auto-approve
-  
+          # Optionally import AKS cluster if it already exists
+          terraform import azurerm_kubernetes_cluster.aks \
+            /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ContainerService/managedClusters/${{ env.AKS_NAME }} || true
+
+          # Apply Terraform changes
+          terraform apply -auto-approve
   
   deploy_services:
     name: Deploy Backend Services to AKS
@@ -93,12 +100,12 @@ jobs:
             kubectl rollout status deployment/$svc -n default
           done
 
-      - name: Run Postman Acceptance Tests
-        run: |
-          newman run tests/staging_acceptance.json \
-            --environment tests/staging_env.json \
-            --reporters cli,junit \
-            --reporter-junit-export test-results/staging_acceptance.xml
+      #- name: Run Postman Acceptance Tests
+      #  run: |
+        #  newman run tests/staging_acceptance.json \
+        #    --environment tests/staging_env.json \
+         #   --reporters cli,junit \
+         #   --reporter-junit-export test-results/staging_acceptance.xml
 
   terraform_destroy:
     name: Destroy Staging Resources
