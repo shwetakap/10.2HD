@@ -48,9 +48,7 @@ jobs:
             /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }} || true
           
         
-          terraform import azurerm_role_assignment.aks_acr_pull \
-          /subscriptions/a8cb1b1d-65cd-49ea-a11b-a5def80bb798/resourceGroups/sk-hd/providers/Microsoft.ContainerRegistry/registries/skhdaks/providers/Microsoft.Authorization/roleAssignments/a6b7a5c1-9ac4-46b4-9891-8977d92dcc56
-
+         
           # Import Azure Container Registry
           terraform import azurerm_container_registry.acr \
             /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ContainerRegistry/registries/${{ env.ACR_NAME }} || true
