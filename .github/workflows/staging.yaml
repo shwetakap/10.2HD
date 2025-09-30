@@ -96,13 +96,14 @@ jobs:
       - name: Wait for Services to be Ready
         run: |
           for svc in product-service-w08e1 order-service-w08e1 ; do
-           kubectl get deployment $svc -n default -o wide
-           kubectl get pods -l app=${svc%-*} -n default
-           for pod in $(kubectl get pods -n default -o name); do
-           echo "=== Describe $pod ==="
-           kubectl describe $pod -n default
-          echo "=== Logs for $pod ==="
-          kubectl logs $pod -n default || echo "No logs yet"
+            kubectl get deployment $svc -n default -o wide
+            kubectl get pods -l app=${svc%-*} -n default
+            for pod in $(kubectl get pods -n default -o name); do
+               echo "=== Describe $pod ==="
+               kubectl describe $pod -n default
+               echo "=== Logs for $pod ==="
+              kubectl logs $pod -n default || echo "No logs yet"
+            done
           done
 
   terraform_destroy:
