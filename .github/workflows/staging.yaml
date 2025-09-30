@@ -12,6 +12,7 @@ env:
   AKS_NAME: skhd-aks
   LOCATION: australiaeast
   ACR_NAME: skhdaks
+  IMAGE_TAG: ${{ github.sha }}
 
 jobs:
   terraform_apply:
@@ -44,13 +45,10 @@ jobs:
         run: |
           terraform import azurerm_resource_group.rg \
             /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }} || true
-
           terraform import azurerm_container_registry.acr \
             /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ContainerRegistry/registries/${{ env.ACR_NAME }} || true
-
           terraform import azurerm_kubernetes_cluster.aks \
             /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ContainerService/managedClusters/${{ env.AKS_NAME }} || true
-
           terraform apply -auto-approve
 
   deploy_services:
@@ -67,19 +65,17 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Get AKS Credentials
-        run: |
-          az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.AKS_NAME }}
+        run: az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.AKS_NAME }}
 
-      #- name: Prepare Kubernetes manifests
-       # run: |
-        #  IMAGE_TAG=${{ github.event.workflow_run.outputs.IMAGE_TAG }}
-          # Use a temp file to avoid breaking YAML formatting
-         # for file in k8s/product-service.yaml k8s/order-service.yaml; do
-          #  cp $file $file.tmp
-           # sed "s|image: .*/product_service:.*|image: myacr.azurecr.io/product_service:$IMAGE_TAG|; \
-            #     s|image: .*/order_service:.*|image: myacr.azurecr.io/order_service:$IMAGE_TAG|" $file.tmp > $file
-            #rm $file.tmp
-          #done
+      - name: Login to ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build and Push Docker Images
+        run: |
+          docker build -t ${{ env.ACR_NAME }}.azurecr.io/product-service:${{ env.IMAGE_TAG }} ./product-service
+          docker build -t ${{ env.ACR_NAME }}.azurecr.io/order-service:${{ env.IMAGE_TAG }} ./order-service
+          docker push ${{ env.ACR_NAME }}.azurecr.io/product-service:${{ env.IMAGE_TAG }}
+          docker push ${{ env.ACR_NAME }}.azurecr.io/order-service:${{ env.IMAGE_TAG }}
 
       - name: Deploy backend infrastructure
         run: |
@@ -95,15 +91,9 @@ jobs:
 
       - name: Wait for Services to be Ready
         run: |
-          for svc in product-service-w08e1 order-service-w08e1 ; do
-            kubectl get deployment $svc -n default -o wide
-            kubectl get pods -l app=${svc%-*} -n default
-            for pod in $(kubectl get pods -n default -o name); do
-               echo "=== Describe $pod ==="
-               kubectl describe $pod -n default
-               echo "=== Logs for $pod ==="
-              kubectl logs $pod -n default || echo "No logs yet"
-            done
+          for svc in product-service order-service; do
+            kubectl rollout status deployment/$svc -n default
+            kubectl get pods -l app=$svc -n default
           done
 
   terraform_destroy:
@@ -129,5 +119,4 @@ jobs:
           TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
           TF_VAR_resource_group: ${{ env.RESOURCE_GROUP }}
           TF_VAR_aks_name: ${{ env.AKS_NAME }}
-          TF_VAR_location: ${{ env.LOCATION }}
-        run: terraform destroy -auto-approve
+          TF_VAR_location: $
