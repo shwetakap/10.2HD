@@ -70,16 +70,16 @@ jobs:
         run: |
           az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.AKS_NAME }}
 
-      - name: Prepare Kubernetes manifests
-        run: |
-          IMAGE_TAG=${{ github.event.workflow_run.outputs.IMAGE_TAG }}
+      #- name: Prepare Kubernetes manifests
+       # run: |
+        #  IMAGE_TAG=${{ github.event.workflow_run.outputs.IMAGE_TAG }}
           # Use a temp file to avoid breaking YAML formatting
-          for file in k8s/product-service.yaml k8s/order-service.yaml; do
-            cp $file $file.tmp
-            sed "s|image: .*/product_service:.*|image: myacr.azurecr.io/product_service:$IMAGE_TAG|; \
-                 s|image: .*/order_service:.*|image: myacr.azurecr.io/order_service:$IMAGE_TAG|" $file.tmp > $file
-            rm $file.tmp
-          done
+         # for file in k8s/product-service.yaml k8s/order-service.yaml; do
+          #  cp $file $file.tmp
+           # sed "s|image: .*/product_service:.*|image: myacr.azurecr.io/product_service:$IMAGE_TAG|; \
+            #     s|image: .*/order_service:.*|image: myacr.azurecr.io/order_service:$IMAGE_TAG|" $file.tmp > $file
+            #rm $file.tmp
+          #done
 
       - name: Deploy backend infrastructure
         run: |
