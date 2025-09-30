@@ -120,3 +120,4 @@ jobs:
           TF_VAR_resource_group: ${{ env.RESOURCE_GROUP }}
           TF_VAR_aks_name: ${{ env.AKS_NAME }}
           TF_VAR_location: $
+        run: terraform destroy -auto-approve  
