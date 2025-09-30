@@ -105,9 +105,9 @@ jobs:
       - name: Update images in AKS
         run: |
           kubectl set image deployment/product-service \
-            product-service=${{ env.ACR_NAME }}.azurecr.io/product-service:$IMAGE_TAG
+            product-service-container=${{ env.ACR_NAME }}.azurecr.io/product-service:$IMAGE_TAG
           kubectl set image deployment/order-service \
-            order-service=${{ env.ACR_NAME }}.azurecr.io/order-service:$IMAGE_TAG
+            order-service-container=${{ env.ACR_NAME }}.azurecr.io/order-service:$IMAGE_TAG
 
       - name: Wait for deployments to complete
         run: |
