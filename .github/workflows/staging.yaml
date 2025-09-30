@@ -6,9 +6,8 @@ on:
       - main
   workflow_dispatch:
 
-
 env:
-  TF_WORKING_DIR: ./infra   # Terraform folder
+  TF_WORKING_DIR: ./infra
   RESOURCE_GROUP: sk-hd
   AKS_NAME: skhd-aks
   LOCATION: australiaeast
@@ -43,23 +42,17 @@ jobs:
           TF_VAR_acr_name: ${{ env.ACR_NAME }}
           TF_VAR_location: ${{ env.LOCATION }}
         run: |
-         
           terraform import azurerm_resource_group.rg \
             /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }} || true
-          
-        
-         
-          # Import Azure Container Registry
+
           terraform import azurerm_container_registry.acr \
             /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ContainerRegistry/registries/${{ env.ACR_NAME }} || true
 
-          # Optionally import AKS cluster if it already exists
           terraform import azurerm_kubernetes_cluster.aks \
             /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.ContainerService/managedClusters/${{ env.AKS_NAME }} || true
 
-          # Apply Terraform changes
           terraform apply -auto-approve
-  
+
   deploy_services:
     name: Deploy Backend Services to AKS
     runs-on: ubuntu-latest
@@ -77,40 +70,34 @@ jobs:
         run: |
           az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.AKS_NAME }}
 
-      - name: Inject CI IMAGE_TAG into manifests
+      - name: Prepare Kubernetes manifests
         run: |
           IMAGE_TAG=${{ github.event.workflow_run.outputs.IMAGE_TAG }}
-          sed -i "s|image: .*/product_service:.*|image: myacr.azurecr.io/product_service:$IMAGE_TAG|" k8s/product-service.yaml
-          sed -i "s|image: .*/order_service:.*|image: myacr.azurecr.io/order_service:$IMAGE_TAG|" k8s/order-service.yaml
-          
+          # Use a temp file to avoid breaking YAML formatting
+          for file in k8s/product-service.yaml k8s/order-service.yaml; do
+            cp $file $file.tmp
+            sed "s|image: .*/product_service:.*|image: myacr.azurecr.io/product_service:$IMAGE_TAG|; \
+                 s|image: .*/order_service:.*|image: myacr.azurecr.io/order_service:$IMAGE_TAG|" $file.tmp > $file
+            rm $file.tmp
+          done
+
       - name: Deploy backend infrastructure
         run: |
-          
           kubectl apply -f k8s/configmaps.yaml
           kubectl apply -f k8s/secrets.yaml
           kubectl apply -f k8s/product-db.yaml
           kubectl apply -f k8s/order-db.yaml
-          
 
       - name: Deploy backend microservices
         run: |
-      
           kubectl apply -f k8s/product-service.yaml
           kubectl apply -f k8s/order-service.yaml
-          
 
       - name: Wait for Services to be Ready
         run: |
           for svc in product-service order-service ; do
             kubectl rollout status deployment/$svc -n default
           done
-
-      #- name: Run Postman Acceptance Tests
-      #  run: |
-        #  newman run tests/staging_acceptance.json \
-        #    --environment tests/staging_env.json \
-         #   --reporters cli,junit \
-         #   --reporter-junit-export test-results/staging_acceptance.xml
 
   terraform_destroy:
     name: Destroy Staging Resources
