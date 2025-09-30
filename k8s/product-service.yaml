@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: product-service-container
-        image: skacr8.azurecr.io/product_service:latest
+        image: skhdaks.azurecr.io/product_service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
