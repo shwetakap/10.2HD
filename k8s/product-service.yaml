@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: product-service-w08e1
+  name: product-service
   labels:
     app: product-service
 spec:
@@ -22,7 +22,7 @@ spec:
         - containerPort: 8000
         env:
         - name: POSTGRES_HOST
-          value: product-db-service-w08e1
+          value: product-db
         - name: POSTGRES_DB
           valueFrom:
             configMapKeyRef:
@@ -62,7 +62,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: product-service-w08e1
+  name: product-service
   labels:
     app: product-service
 spec:

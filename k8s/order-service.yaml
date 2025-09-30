@@ -3,7 +3,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: order-service-w08e1
+  name: order-service
   labels:
     app: order-service
 spec:
@@ -24,7 +24,7 @@ spec:
         - containerPort: 8000
         env:
         - name: POSTGRES_HOST
-          value: order-db-service-w08e1
+          value: order-db
         - name: POSTGRES_DB
           valueFrom:
             configMapKeyRef:
@@ -49,7 +49,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: order-service-w08e1
+  name: order-service
   labels:
     app: order-service
 spec:
