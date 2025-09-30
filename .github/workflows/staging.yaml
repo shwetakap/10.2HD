@@ -68,12 +68,12 @@ jobs:
 
       - name: Build and Push Product Service
         run: |
-          docker build -t ${{ env.ACR_NAME }}.azurecr.io/product-service:${{ env.IMAGE_TAG }} ./10.2HD/product-service
+          docker build -t ${{ env.ACR_NAME }}.azurecr.io/product-service:${{ env.IMAGE_TAG }} ./10.2HD/backend/product_service
           docker push ${{ env.ACR_NAME }}.azurecr.io/product-service:${{ env.IMAGE_TAG }}
 
       - name: Build and Push Order Service
         run: |
-          docker build -t ${{ env.ACR_NAME }}.azurecr.io/order-service:${{ env.IMAGE_TAG }} ./10.2HD/order-service
+          docker build -t ${{ env.ACR_NAME }}.azurecr.io/order-service:${{ env.IMAGE_TAG }} ./10.2HD/backend/order_service
           docker push ${{ env.ACR_NAME }}.azurecr.io/order-service:${{ env.IMAGE_TAG }}
 
   deploy_services:
