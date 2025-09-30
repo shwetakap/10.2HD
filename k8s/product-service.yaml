@@ -23,7 +23,6 @@ spec:
         ports:
         - containerPort: 8000
         env:
-        # Database connection details
         - name: POSTGRES_HOST
           value: product-db-service-w08e1
         - name: POSTGRES_DB
