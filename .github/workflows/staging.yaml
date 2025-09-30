@@ -101,6 +101,15 @@ jobs:
           kubectl apply -f secrets.yaml
           kubectl apply -f product-db.yaml
           kubectl apply -f order-db.yaml
+          kubectl apply -f product-service.yaml
+          kubectl apply -f order-service.yaml
+
+      - name: Wait for Deployments to be Ready
+        run: |
+         for deploy in product-service order-service; do
+           kubectl wait --for=condition=available --timeout=180s deployment/$deploy
+         done
+
 
       - name: Update images in AKS
         run: |
