@@ -70,13 +70,13 @@ jobs:
         run: |
           docker build -t ${{ env.ACR_NAME }}.azurecr.io/product-service:${{ env.IMAGE_TAG }} ./backend/product_service
           docker push ${{ env.ACR_NAME }}.azurecr.io/product-service:${{ env.IMAGE_TAG }}
-        working-directory: ./10.2HD
+     
 
       - name: Build and Push Order Service
         run: |
          docker build -t ${{ env.ACR_NAME }}.azurecr.io/order-service:${{ env.IMAGE_TAG }} ./backend/order_service
          docker push ${{ env.ACR_NAME }}.azurecr.io/order-service:${{ env.IMAGE_TAG }}
-        working-directory: ./10.2HD
+        
   
   deploy_services:
     name: Deploy Backend Services to AKS
