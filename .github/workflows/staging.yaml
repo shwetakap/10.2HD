@@ -12,6 +12,7 @@ env:
   RESOURCE_GROUP: sk-hd
   AKS_NAME: skhd-aks
   LOCATION: australiaeast
+  ACR_NAME: skhdaks
 
 jobs:
   terraform_apply:
