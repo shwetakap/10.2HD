@@ -85,7 +85,7 @@ jobs:
           
       - name: Deploy backend infrastructure
         run: |
-          cd k8s/
+          
           kubectl apply -f k8s/configmaps.yaml
           kubectl apply -f k8s/secrets.yaml
           kubectl apply -f k8s/product-db.yaml
@@ -94,7 +94,7 @@ jobs:
 
       - name: Deploy backend microservices
         run: |
-          cd k8s/
+      
           kubectl apply -f k8s/product-service.yaml
           kubectl apply -f k8s/order-service.yaml
           
