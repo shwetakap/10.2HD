@@ -95,7 +95,7 @@ jobs:
 
       - name: Wait for Services to be Ready
         run: |
-          for svc in product-service order-service ; do
+          for svc in product-service-w08e1 order-service-w08e1 ; do
             kubectl rollout status deployment/$svc -n default
           done
 
