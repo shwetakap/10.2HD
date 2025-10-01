@@ -1,38 +1,88 @@
-# Week 08 - Continuous Delivery (CD) to AKS with GitHub Actions
+# 🚀 DevOps Project: Automated CI/CD Pipeline with Azure AKS
 
-This example demonstrates a robust Continuous Delivery (CD) pipeline using GitHub Actions to deploy your e-commerce microservices and frontend application to an Azure Kubernetes Service (AKS) cluster. Building upon Week 07's Continuous Integration (CI), this setup automates the final step of getting your tested Docker images from Azure Container Registry (ACR) onto your Kubernetes cluster.
+This project demonstrates a full **DevOps CI/CD pipeline** implementation for a containerized application using **GitHub Actions, Docker, Terraform, SonarCloud, Snyk, and Azure Kubernetes Service (AKS)**.  
 
-## 🚀 Purpose
+It covers the complete lifecycle:  
+- Continuous Integration (**Build, Test, Scan, Push**)  
+- Continuous Deployment (**Staging → Production**)  
+- Infrastructure as Code with **Terraform**  
+- Monitoring & Scaling (**AKS + HPA**)  
 
-The primary goals of this example are to illustrate:
+---
 
-- **Automated Deployment:** Deploying containerized applications (backend microservices and frontend) to AKS.
-- **Two-Phase CD:** Using separate GitHub Actions workflows for backend and frontend deployment to handle dynamic external IP addresses of LoadBalancer services.
-- **Dynamic Configuration:** How to inject dynamically obtained backend service IPs into the frontend's JavaScript configuration during the CD process.
-- **GitHub Actions for CD:** Leveraging GitHub's native CI/CD platform for orchestrating deployments.
+## 📌 Features Implemented
 
-## 🛠️ Prerequisites
+1. **Continuous Integration (CI)**
+   - Automated build of Docker images.
+   - Unit testing with `pytest`.
+   - Code quality analysis with **SonarCloud**.
+   - Security vulnerability scanning with **Snyk** and **Grype/Syft**.
+   - Push built images to **Azure Container Registry (ACR)**.
 
-Before you begin, ensure you have the following:
+2. **Staging Deployment**
+   - Infrastructure provisioning with **Terraform** on Azure.
+   - Deployment of application to **staging AKS environment**.
+   - Postman API tests to validate functionality.
+   - Automated cleanup (`terraform destroy`) after pipeline completion.
 
-1. Create all required resources (Resource Group, Storage Account, ACR, AKS)
-2. **Azure Service Principal:** Create new Service Principal.
-3. Add new role for service principal for resource group. **More detailes about this step will be provided in seminar. Make sure you join seminar for this**.
-4. **GitHub Repository Secrets:**
-    - In your GitHub repository, go to **Settings** > **Secrets and variables** > **Actions**.
-    - Click **New repository secret** for each:
-      - `AZURE_CREDENTIALS`: You need separate SP with Owner permission (As done in step 3).
+3. **Production Deployment**
+   - Manual approval step before production release.
+   - Deployment of application to **production AKS** using `docker-compose.prod.yml`.
+   - Integration with monitoring tools (**New Relic / Datadog**) for observability.
 
-## 📝 Configuration Files
+4. **Monitoring & Scaling**
+   - Configured **Horizontal Pod Autoscaler (HPA)** to scale services based on CPU/memory usage.
+   - Demonstrates auto-scaling under load conditions.
 
-### 1. Verify Kubernetes Manifests (`week08/k8s/*.yaml`)
+---
 
-- **Images**: All Deployment resources must reference to your ACR with proper image name and tags.
+## ⚙️ Tech Stack
 
-```yaml
-image: <YOUR_ACR_NAME>.azurecr.io/<image_name>:<image_tag>
-```
+- **Languages/Frameworks**: Python, Node.js (MERN)
+- **CI/CD**: GitHub Actions
+- **Containerization**: Docker, Docker Compose
+- **Infrastructure**: Terraform (Azure AKS + ACR)
+- **Testing**: Pytest, Postman (integration tests)
+- **Code Quality & Security**: SonarCloud, Snyk, Grype, Syft
+- **Monitoring**: New Relic / Datadog
+- **Secrets Management**: GitHub Secrets
 
-### 2. Update Backend Pipeline (`.github/workflows/backend-cd.yml`) & Frontend Pipeline (`.github/workflows/frontend-cd.yml`)
+---
 
-Ensure you replace all placeholders value to actual values.
+## 🔑 GitHub Secrets Required
+
+Add these secrets in your GitHub repository settings:
+
+| Secret Name            | Purpose                                         |
+|-------------------------|-------------------------------------------------|
+| `AZURE_CREDENTIALS`    | Service principal JSON for Terraform + AKS auth |
+| `ACR_NAME`             | Azure Container Registry name                   |
+| `SONAR_TOKEN`          | Authentication token for SonarCloud             |
+| `SONAR_HOST_URL`       | SonarCloud instance URL (e.g., `https://sonarcloud.io`) |
+| `SNYK_TOKEN`           | Token for Snyk security scans                   |
+| `NEW_RELIC_LICENSE_KEY`| API key for New Relic monitoring                |
+
+---
+
+## 📂 Project Structure
+
+```bash
+.
+├── backend/
+│   ├── product_service/
+│   ├── order_service/
+│   ├── customer_service/
+│   └── tests/
+├── infra/                # Terraform configuration
+├── k8s/                  # Kubernetes manifests
+│   ├── product-service.yaml
+│   ├── order-service.yaml
+│   ├── customer-service.yaml
+│   ├── configmaps.yaml
+│   ├── secrets.yaml
+│   └── databases.yaml
+├── .github/workflows/
+│   ├── ci.yaml
+│   ├── staging.yaml
+│   └── prod.yaml
+└── README.md
