@@ -150,12 +150,9 @@ jobs:
 
       - name: Run Snyk test
         run: |
-          cd backend/product_service
-          snyk test --json  --skip-unresolved > ../../product_service_snyk.json
-          cd backend/order_service
-          snyk test --json  --skip-unresolved > ../../order_service_snyk.json
-          cd backend/customer_service
-          snyk test --json  --skip-unresolved > ../../customer_service_snyk.json
+           (cd backend/product_service && snyk test --json --skip-unresolved > ../../product_service_snyk.json)
+           (cd backend/order_service && snyk test --json --skip-unresolved > ../../order_service_snyk.json)
+           (cd backend/customer_service && snyk test --json --skip-unresolved > ../../customer_service_snyk.json)
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
