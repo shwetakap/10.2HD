@@ -158,9 +158,22 @@ jobs:
             fi
 
              echo "🎉 All deployments verified successfully!"
-
-
   
+  
+      - name: Run Postman Integration Tests
+        run: |
+          npm install -g newman
+          # Dynamically create environment JSON with IPs if needed
+          newman run postman/OrderService.postman_collection.json \
+            -e postman/Staging.postman_environment.json \
+            --reporters cli,junit \
+            --reporter-junit-export test-results/api-tests.xml
+      - uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: test-results/
+
+
   terraform_destroy:
     name: Destroy Staging Resources
     runs-on: ubuntu-latest

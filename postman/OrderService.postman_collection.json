@@ -1,0 +1,116 @@
+{
+  "info": {
+    "name": "Order Service",
+    "_postman_id": "hd-order-service-001",
+    "description": "Postman collection for Order Service API with tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get All Orders",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://{{order_ip}}:{{order_port}}/orders/?skip=0&limit=10",
+          "host": ["{{order_ip}}"],
+          "port": "{{order_port}}",
+          "path": ["orders"],
+          "query": [
+            {"key": "skip", "value": "0"},
+            {"key": "limit", "value": "10"}
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", () => { pm.response.to.have.status(200); });",
+              "pm.test(\"Response is array\", () => { pm.expect(pm.response.json()).to.be.an('array'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get Order by ID",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "http://{{order_ip}}:{{order_port}}/orders/{{test_order_id}}",
+                 "host": ["{{order_ip}}"], "port": "{{order_port}}", "path": ["orders", "{{test_order_id}}"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", () => { pm.response.to.have.status(200); });",
+              "pm.test(\"Order ID matches\", () => { pm.expect(pm.response.json().order_id).to.eql(parseInt(pm.environment.get('test_order_id'))); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Update Order Status",
+      "request": {
+        "method": "PATCH",
+        "url": {
+          "raw": "http://{{order_ip}}:{{order_port}}/orders/{{test_order_id}}/status?new_status=shipped",
+          "host": ["{{order_ip}}"], "port": "{{order_port}}",
+          "path": ["orders","{{test_order_id}}","status"],
+          "query":[{"key":"new_status","value":"shipped"}]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", () => { pm.response.to.have.status(200); });",
+              "pm.test(\"Order status updated\", () => { pm.expect(pm.response.json().status).to.eql('shipped'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delete Order",
+      "request": {
+        "method": "DELETE",
+        "url": { "raw": "http://{{order_ip}}:{{order_port}}/orders/{{test_order_id}}",
+                 "host": ["{{order_ip}}"], "port": "{{order_port}}", "path": ["orders", "{{test_order_id}}"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 204\", () => { pm.response.to.have.status(204); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get Order Items",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "http://{{order_ip}}:{{order_port}}/orders/{{test_order_id}}/items",
+                 "host": ["{{order_ip}}"], "port": "{{order_port}}", "path": ["orders", "{{test_order_id}}","items"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", () => { pm.response.to.have.status(200); });",
+              "pm.test(\"Response is array\", () => { pm.expect(pm.response.json()).to.be.an('array'); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
