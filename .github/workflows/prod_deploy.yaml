@@ -69,4 +69,14 @@ jobs:
           echo "PRODUCT_IP=$PRODUCT_IP"
           echo "ORDER_IP=$ORDER_IP"
 
-          if ! curl --max-time 10 http://$PR
+            if ! curl --max-time 10 http://$PRODUCT_IP:8080/health | grep '"status":"ok"'; then
+            echo "❌ Product service not healthy!"
+            exit 1
+          fi
+
+          if ! curl --max-time 10 http://$ORDER_IP:8081/health | grep '"status":"ok"'; then
+            echo "❌ Order service not healthy!"
+            exit 1
+          fi
+
+          echo "🎉 Production deployment verified successfully!"
