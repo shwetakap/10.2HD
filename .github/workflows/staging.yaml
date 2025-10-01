@@ -140,8 +140,8 @@ jobs:
                ORDER_IP=$(kubectl get svc order-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
              done
            
-            echo "🔗 Product Service IP=$PRODUCT_IP" >> $GITHUB_ENV
-            echo "🔗 Order Service IP=$ORDER_IP" >> $GITHUB_ENV
+            echo "PRODUCT_IP=$PRODUCT_IP" >> $GITHUB_ENV
+            echo "ORDER_IP=$ORDER_IP" >> $GITHUB_ENV
 
              # Health checks
             echo "✅ Testing product-service health..."
@@ -163,7 +163,7 @@ jobs:
         run: |
             echo "Running tests for Order & Product Services"
             npm install -g newman
-            newman run postman/Test.postman_collection.json \
+            newman run postman/.postman_collection.json \
              --env-var "order_ip=${ORDER_IP}" \
              --env-var "order_port=8081" \
              --env-var "product_ip=${PRODUCT_IP}" \
