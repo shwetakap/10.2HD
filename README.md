@@ -1,38 +1,99 @@
-# Week 08 - Continuous Delivery (CD) to AKS with GitHub Actions
+🛠️ E-Commerce Microservices – DevOps CI/CD Pipeline
 
-This example demonstrates a robust Continuous Delivery (CD) pipeline using GitHub Actions to deploy your e-commerce microservices and frontend application to an Azure Kubernetes Service (AKS) cluster. Building upon Week 07's Continuous Integration (CI), this setup automates the final step of getting your tested Docker images from Azure Container Registry (ACR) onto your Kubernetes cluster.
+This repository contains a microservices-based e-commerce backend with a fully automated CI/CD pipeline implemented using GitHub Actions, Terraform, and Azure Kubernetes Service (AKS).
 
-## 🚀 Purpose
+The project demonstrates modern DevOps practices: automated testing, quality and security scanning, containerization, staging deployment, production deployment, and supply chain transparency with SBOM generation.
 
-The primary goals of this example are to illustrate:
+🚀 Features Implemented
+🔹 CI Pipeline (ci.yaml)
 
-- **Automated Deployment:** Deploying containerized applications (backend microservices and frontend) to AKS.
-- **Two-Phase CD:** Using separate GitHub Actions workflows for backend and frontend deployment to handle dynamic external IP addresses of LoadBalancer services.
-- **Dynamic Configuration:** How to inject dynamically obtained backend service IPs into the frontend's JavaScript configuration during the CD process.
-- **GitHub Actions for CD:** Leveraging GitHub's native CI/CD platform for orchestrating deployments.
+Runs unit tests with pytest for Product, Order, and Customer services.
 
-## 🛠️ Prerequisites
+Performs SonarQube analysis for code quality.
 
-Before you begin, ensure you have the following:
+Executes Snyk vulnerability scans.
 
-1. Create all required resources (Resource Group, Storage Account, ACR, AKS)
-2. **Azure Service Principal:** Create new Service Principal.
-3. Add new role for service principal for resource group. **More detailes about this step will be provided in seminar. Make sure you join seminar for this**.
-4. **GitHub Repository Secrets:**
-    - In your GitHub repository, go to **Settings** > **Secrets and variables** > **Actions**.
-    - Click **New repository secret** for each:
-      - `AZURE_CREDENTIALS`: You need separate SP with Owner permission (As done in step 3).
+Builds Docker images for all services.
 
-## 📝 Configuration Files
+Pushes images to Azure Container Registry (ACR).
 
-### 1. Verify Kubernetes Manifests (`week08/k8s/*.yaml`)
+Generates SBOMs with Syft and scans for vulnerabilities with Grype.
 
-- **Images**: All Deployment resources must reference to your ACR with proper image name and tags.
+🔹 Staging Deployment (staging.yaml)
 
-```yaml
-image: <YOUR_ACR_NAME>.azurecr.io/<image_name>:<image_tag>
-```
+Provisions infrastructure dynamically with Terraform.
 
-### 2. Update Backend Pipeline (`.github/workflows/backend-cd.yml`) & Frontend Pipeline (`.github/workflows/frontend-cd.yml`)
+Deploys microservices to staging AKS environment.
 
-Ensure you replace all placeholders value to actual values.
+Runs acceptance tests using Postman/Newman.
+
+Destroys staging environment automatically after validation.
+
+🔹 Production Deployment (prod.yaml)
+
+Deploys CI-tested images to production AKS cluster.
+
+Dynamically injects image tags into Kubernetes manifests.
+
+Performs smoke tests to verify service availability.
+
+📂 Project Structure
+├── backend/
+│   ├── product_service/
+│   ├── order_service/
+│   ├── customer_service/
+│   └── tests/
+├── infra/                # Terraform configuration
+├── k8s/                  # Kubernetes manifests
+│   ├── product-service.yaml
+│   ├── order-service.yaml
+│   ├── customer-service.yaml
+│   ├── configmaps.yaml
+│   ├── secrets.yaml
+│   └── databases.yaml
+├── .github/workflows/
+│   ├── ci.yaml
+│   ├── staging.yaml
+│   └── prod.yaml
+└── README.md
+
+🛠️ Tools & Technologies
+
+Languages & Frameworks: Python, FastAPI, pytest
+
+Version Control & CI/CD: GitHub Actions
+
+Containerization: Docker, Azure Container Registry
+
+Infrastructure as Code: Terraform
+
+Orchestration: Kubernetes (AKS)
+
+Testing: pytest, Postman/Newman
+
+Security & Quality: SonarQube, Snyk, Syft, Grype
+
+🔑 Required GitHub Secrets
+
+Add the following secrets to your repository for pipelines to work:
+
+Secret	Description
+AZURE_CREDENTIALS	JSON output of az ad sp create-for-rbac (for login)
+AZURE_CLIENT_ID	Service Principal App ID
+AZURE_CLIENT_SECRET	Service Principal password
+AZURE_TENANT_ID	Azure Tenant ID
+AZURE_SUBSCRIPTION_ID	Azure Subscription ID
+SONAR_TOKEN	SonarQube authentication token
+SONAR_HOST_URL	SonarQube server URL
+SNYK_TOKEN	Snyk authentication token
+▶️ How to Run
+
+Fork or clone this repo.
+
+Add GitHub secrets listed above.
+
+Push changes to the testing branch → triggers CI pipeline.
+
+Merge into main → triggers production deployment.
+
+Optionally, trigger staging deployment manually for acceptance testing.
