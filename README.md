@@ -6,7 +6,7 @@ It covers the complete lifecycle:
 - Continuous Integration (**Build, Test, Scan, Push**)  
 - Continuous Deployment (**Staging → Production**)  
 - Infrastructure as Code with **Terraform**  
-- Monitoring & Scaling (**AKS + HPA**)  
+
 
 ---
 
@@ -28,11 +28,8 @@ It covers the complete lifecycle:
 3. **Production Deployment**
    - Manual approval step before production release.
    - Deployment of application to **production AKS** using `docker-compose.prod.yml`.
-   - Integration with monitoring tools (**New Relic / Datadog**) for observability.
+   
 
-4. **Monitoring & Scaling**
-   - Configured **Horizontal Pod Autoscaler (HPA)** to scale services based on CPU/memory usage.
-   - Demonstrates auto-scaling under load conditions.
 
 ---
 
@@ -44,7 +41,6 @@ It covers the complete lifecycle:
 - **Infrastructure**: Terraform (Azure AKS + ACR)
 - **Testing**: Pytest, Postman (integration tests)
 - **Code Quality & Security**: SonarCloud, Snyk, Grype, Syft
-- **Monitoring**: New Relic / Datadog
 - **Secrets Management**: GitHub Secrets
 
 ---
@@ -60,7 +56,6 @@ Add these secrets in your GitHub repository settings:
 | `SONAR_TOKEN`          | Authentication token for SonarCloud             |
 | `SONAR_HOST_URL`       | SonarCloud instance URL (e.g., `https://sonarcloud.io`) |
 | `SNYK_TOKEN`           | Token for Snyk security scans                   |
-| `NEW_RELIC_LICENSE_KEY`| API key for New Relic monitoring                |
 
 ---
 
@@ -85,4 +80,5 @@ Add these secrets in your GitHub repository settings:
 │   ├── ci.yaml
 │   ├── staging.yaml
 │   └── prod.yaml
+├── postman
 └── README.md
