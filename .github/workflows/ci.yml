@@ -3,7 +3,7 @@ name: Backend CI - Test, Build, Scan and Push Images to ACR
 on:
   push:
     branches:
-      - testing
+      - main
   workflow_dispatch:
 
 env:
