@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -59,7 +59,7 @@ jobs:
     needs: terraform_apply
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Login to ACR
         uses: azure/docker-login@v1
@@ -84,7 +84,7 @@ jobs:
     needs: docker_build_push
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Azure Login
         uses: azure/login@v1
@@ -181,7 +181,7 @@ jobs:
     if: always()  # ensures cleanup even if previous steps fail
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
