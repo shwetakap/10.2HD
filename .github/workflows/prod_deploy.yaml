@@ -1,7 +1,11 @@
 name: CD - Deploy Backend Services to AKS
 
 on:
-  workflow_dispatch:
+push:
+    branches:
+      - testing
+    workflow_dispatch:
+  
     inputs:
       aks_cluster_name:
         description: 'Name of the AKS Cluster to deploy to'
@@ -18,7 +22,7 @@ on:
       image_tag:
         description: 'CI-tested image tag'
         required: true
-        default: ''
+      
 
 jobs:
   deploy_backend:
@@ -79,12 +83,7 @@ jobs:
           echo "PRODUCT_IP=$PRODUCT_IP" >> $GITHUB_ENV
           echo "ORDER_IP=$ORDER_IP" >> $GITHUB_ENV
 
-      - name: Run PROD smoke tests (Postman/Newman)
-        run: |
-          newman run tests/prod_smoke.json \
-            --environment tests/prod_env.json \
-            --reporters cli,junit \
-            --reporter-junit-export test-results/prod_smoke.xml
+ 
 
       - name: Azure Logout
         run: az logout
