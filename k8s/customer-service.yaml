@@ -21,7 +21,7 @@ spec:
         image: skhdaks.azurecr.io/customer-service:latest
         imagePullPolicy: Always
         ports:
-        - containerPort: 8002
+        - containerPort: 8000
         env:
         - name: POSTGRES_HOST
           value: customer-db
