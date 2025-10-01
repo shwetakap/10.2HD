@@ -153,7 +153,7 @@ jobs:
              fi
 
             echo "✅ Testing order-service health..."
-             if ! curl -f http://$ORDER_IP:8080/health; then
+             if ! curl -f http://$ORDER_IP:8000/health; then
                echo "❌ Order service not healthy!"
                kubectl logs -l app=order-service --tail=50
                exit 1
