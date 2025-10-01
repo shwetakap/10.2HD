@@ -159,27 +159,9 @@ jobs:
 
              echo "🎉 All deployments verified successfully!"
   
-
-
-      - name: Create Postman Staging Environment
-        run: |
-          cat <<EOF > postman/Staging.postman_environment.json
-          {
-            "id": "staging-env",
-            "name": "Staging",
-            "values": [
-              { "key": "order_ip", "value": "${ORDER_IP}", "enabled": true },
-              { "key": "order_port", "value": "8081", "enabled": true },
-              { "key": "product_ip", "value": "${PRODUCT_IP}", "enabled": true },
-              { "key": "product_port", "value": "8080", "enabled": true },
-              { "key": "test_order_id", "value": "1", "enabled": true }
-            ]
-          }
-          EOF
       - name: Run Postman Integration Tests
         run: |
           npm install -g newman
-          # Dynamically create environment JSON with IPs if needed
           newman run postman/OrderService.postman_collection.json \
             -e postman/Staging.postman_environment.json \
             --reporters cli,junit \
