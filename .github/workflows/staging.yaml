@@ -146,14 +146,14 @@ jobs:
 
              # Health checks
             echo "✅ Testing product-service health..."
-            if ! curl -f http://$PRODUCT_IP:8080/api/health; then
+            if ! curl -f http://$PRODUCT_IP:8080/health; then
              echo "❌ Product service not healthy!"
              kubectl logs -l app=product-service --tail=50
              exit 1
              fi
 
             echo "✅ Testing order-service health..."
-             if ! curl -f http://$ORDER_IP:8080/api/health; then
+             if ! curl -f http://$ORDER_IP:8080/health; then
                echo "❌ Order service not healthy!"
                kubectl logs -l app=order-service --tail=50
                exit 1
