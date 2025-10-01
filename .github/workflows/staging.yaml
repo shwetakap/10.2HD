@@ -113,7 +113,25 @@ jobs:
         run: |
           kubectl rollout status deployment/product-service --timeout=180s
           kubectl rollout status deployment/order-service --timeout=180s
+          kubectl get pods
+          PRODUCT_IP=$(kubectl get svc product-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          ORDER_IP=$(kubectl get svc order-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "🔗 Product Service IP: $PRODUCT_IP"
+          echo "🔗 Order Service IP: $ORDER_IP"
+          echo "✅ Testing product-service health..."
+          curl -f http://$PRODUCT_IP:8080/api/health || (echo "Product service not healthy!" && exit 1)
+          echo "✅ Testing order-service health..."
+          curl -f http://$ORDER_IP:8080/api/health || (echo "Order service not healthy!" && exit 1)
+          echo "🎉 Deployment verified successfully!"
 
+
+
+
+
+
+
+
+  
   terraform_destroy:
     name: Destroy Staging Resources
     runs-on: ubuntu-latest
