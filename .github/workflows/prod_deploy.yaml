@@ -10,15 +10,15 @@ on:
       aks_cluster_name:
         description: 'Name of the AKS Cluster to deploy to'
         required: true
-        default: 'sk10-aks'
+        default: 'skhdaks'
       aks_resource_group:
         description: 'Resource Group of the AKS Cluster'
         required: true
-        default: 'sk10-rg'
+        default: 'sk-hd'
       aks_acr_name:
         description: 'Name of ACR'
         required: true
-        default: 'sk10acr'
+        default: 'skhdaks'
       image_tag:
         description: 'CI-tested image tag'
         required: true
