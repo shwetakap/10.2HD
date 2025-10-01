@@ -128,34 +128,32 @@ jobs:
             echo "⏳ Waiting for order-service rollout..."
             kubectl rollout status deployment/order-service --timeout=300s
             # Wait for EXTERNAL-IP
-            PRODUCT_IP=""
-            ORDER_IP=""
-            echo "⏳ Waiting for product-service EXTERNAL-IP..."
-            while [ -z "$PRODUCT_IP" ] || [ "$PRODUCT_IP" = "<pending>" ]; do
-             sleep 5
-             PRODUCT_IP=$(kubectl get svc product-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-            done
-            echo "⏳ Waiting for order-service EXTERNAL-IP..."
-            while [ -z "$ORDER_IP" ] || [ "$ORDER_IP" = "<pending>" ]; do
-             sleep 5
-             ORDER_IP=$(kubectl get svc order-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-            done    
+            PRODUCT_IP=$(kubectl get svc product-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            ORDER_IP=$(kubectl get svc order-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            echo "🔗 Product Service IP: $PRODUCT_IP"
+            echo "🔗 Order Service IP: $ORDER_IP"
+
+             until [ -n "$PRODUCT_IP" ] && [ -n "$ORDER_IP" ]; do
+               echo "⏳ Waiting for EXTERNAL-IP..."
+               sleep 5
+                PRODUCT_IP=$(kubectl get svc product-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+               ORDER_IP=$(kubectl get svc order-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+             done
            
             echo "🔗 Product Service IP: $PRODUCT_IP"
             echo "🔗 Order Service IP: $ORDER_IP"
 
              # Health checks
             echo "✅ Testing product-service health..."
-            if ! curl -f http://$PRODUCT_IP:8080/health; then
-             echo "❌ Product service not healthy!"
-             kubectl logs -l app=product-service --tail=50
-             exit 1
+            if ! curl --max-time 10 http://$PRODUCT_IP:8080/health | grep '"status":"ok"'; then
+               echo "❌ Product service not healthy!"
+               exit 1
              fi
 
             echo "✅ Testing order-service health..."
-             if ! curl -f http://$ORDER_IP:8000/health; then
+             
+             if ! curl --max-time 10 http://$ORDER_IP:8080/health | grep '"status":"ok"'; then
                echo "❌ Order service not healthy!"
-               kubectl logs -l app=order-service --tail=50
                exit 1
              fi
 
