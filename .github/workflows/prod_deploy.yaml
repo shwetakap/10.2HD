@@ -63,7 +63,7 @@ jobs:
           ORDER_IP=$(kubectl get svc order-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
           
 
-          until [ -n "$PRODUCT_IP" ] && [ -n "$ORDER_IP" ] && [ -n "$CUSTOMER_IP" ]; do
+          until [ -n "$PRODUCT_IP" ] && [ -n "$ORDER_IP" ]; do
             echo "⏳ Waiting for EXTERNAL-IP..."
             sleep 5
             PRODUCT_IP=$(kubectl get svc product-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
