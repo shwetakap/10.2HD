@@ -89,6 +89,18 @@ jobs:
           POSTGRES_PASSWORD: postgres
         run: pytest tests --maxfail=1 --disable-warnings -q
 
+
+      - name: Run customer_service tests
+        working-directory: backend/customer_service
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5433
+          POSTGRES_DB: orders
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        run: pytest tests --maxfail=1 --disable-warnings -q
+
+   
    
 
   # ---------------------------
@@ -140,6 +152,10 @@ jobs:
         run: |
           cd backend/product_service
           snyk test --json  --skip-unresolved > ../../product_service_snyk.json
+          cd backend/order_service
+          snyk test --json  --skip-unresolved > ../../order_service_snyk.json
+          cd backend/customer_service
+          snyk test --json  --skip-unresolved > ../../customer_service_snyk.json
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
@@ -149,6 +165,8 @@ jobs:
           name: snyk-reports
           path: |
             product_service_snyk.json
+            order_service_snyk.json
+            customer_service_snyk.json
 
   # ---------------------------
   # Stage 4: Build and Push Docker Images + SBOM
