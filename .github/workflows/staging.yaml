@@ -7,6 +7,8 @@ on:
     workflows: ["Backend CI - Test, Build, Scan and Push Images to ACR"]
     types:
       - completed
+    branches:
+      - testing
 
 env:
   TF_WORKING_DIR: ./infra
