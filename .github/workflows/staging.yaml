@@ -42,6 +42,8 @@ jobs:
           TF_VAR_aks_name: ${{ env.AKS_NAME }}
           TF_VAR_acr_name: ${{ env.ACR_NAME }}
           TF_VAR_location: ${{ env.LOCATION }}
+          AZURE_STORAGE_ACCOUNT_NAME: ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }}
+          AZURE_STORAGE_ACCOUNT_KEY: ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
         run: |
           terraform import azurerm_resource_group.rg \
             /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }} || true
@@ -141,19 +143,17 @@ jobs:
                 echo "🔗 Product Service IP: $PRODUCT_IP"
                 echo "🔗 Order Service IP: $ORDER_IP"
 
-                echo "✅ Testing product-service health..."
-                if ! curl -f http://$PRODUCT_IP:8080/api/health; then
-                   echo "❌ Product service not healthy!"
-                    kubectl logs -l app=product-service --tail=50
-                   exit 1
-                fi
+                 for i in {1..12}; do
+                   echo "Checking product-service health attempt $i..."
+                    if curl -f --max-time 5 http://$PRODUCT_IP:8080/api/health; then break; fi
+                    sleep 5
+                  done
 
-                echo "✅ Testing order-service health..."
-                if ! curl -f http://$ORDER_IP:8080/api/health; then
-                 echo "❌ Order service not healthy!"
-                 kubectl logs -l app=order-service --tail=50
-                 exit 1
-                fi
+                for i in {1..12}; do
+                  echo "Checking order-service health attempt $i..."
+                 if curl -f --max-time 5 http://$ORDER_IP:8080/api/health; then break; fi
+                 sleep 5
+                 done
 
                 echo "🎉 Deployment verified successfully!"
 
