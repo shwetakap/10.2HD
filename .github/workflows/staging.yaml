@@ -1,10 +1,12 @@
 name: Staging Deployment
 
+
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Backend CI - Test, Build and Push Images to ACR"]
+    types:
+      - completed
 
 env:
   TF_WORKING_DIR: ./infra
@@ -146,7 +148,7 @@ jobs:
             echo "🔗 Order Service IP: $ORDER_IP"
           
 
-             until [ -n "$PRODUCT_IP" ] && [ -n "$ORDER_IP" ] && [ -n "$CUSTOMER_IP" ]; do
+             until [ -n "$PRODUCT_IP" ] && [ -n "$ORDER_IP" ]; do
                echo "⏳ Waiting for EXTERNAL-IP..."
                sleep 5
                 PRODUCT_IP=$(kubectl get svc product-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
