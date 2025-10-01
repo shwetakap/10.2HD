@@ -113,52 +113,34 @@ jobs:
 
       - name: Wait for deployments to complete
         run: |
-                set -e
-                echo "⏳ Waiting for product-service rollout..."
-                if ! kubectl rollout status deployment/product-service --timeout=300s; then
-                  echo "⚠️ Product-service rollout failed!"
-                  echo "📝 Pod status:"
-                  kubectl get pods -o wide
-                   echo "📝 Pod events:"
-                   kubectl describe pod -l app=product-service
-                   kubectl logs -l app=product-service --tail=50
-                   exit 1
+              function check_health() {
+               local svc=$1
+               local ip
+               ip=$(kubectl get svc $svc -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+               echo "🔗 $svc IP: $ip"
+          
+               for i in {1..12}; do
+                echo "Checking $svc health attempt $i..."
+                if curl -f --max-time 5 http://$ip:8080/api/health; then
+                   echo "✅ $svc is healthy"
+                  return 0
                 fi
-
-                echo "⏳ Waiting for order-service rollout..."
-                if ! kubectl rollout status deployment/order-service --timeout=300s; then
-                   echo "⚠️ Order-service rollout failed!"
-                   echo "📝 Pod status:"
-                   kubectl get pods -o wide
-                   echo "📝 Pod events:"
-                   kubectl describe pod -l app=order-service
-                  kubectl logs -l app=order-service --tail=50
-                  exit 1
-                fi
-
-                echo "✅ All pods are running. Fetching service IPs..."
-                PRODUCT_IP=$(kubectl get svc product-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-                ORDER_IP=$(kubectl get svc order-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-
-                echo "🔗 Product Service IP: $PRODUCT_IP"
-                echo "🔗 Order Service IP: $ORDER_IP"
-
-                 for i in {1..12}; do
-                   echo "Checking product-service health attempt $i..."
-                    if curl -f --max-time 5 http://$PRODUCT_IP:8080/api/health; then break; fi
-                    sleep 5
-                  done
-
-                for i in {1..12}; do
-                  echo "Checking order-service health attempt $i..."
-                 if curl -f --max-time 5 http://$ORDER_IP:8080/api/health; then break; fi
                  sleep 5
-                 done
+               done
+          
+              echo "❌ $svc health check failed after retries!"
+              echo "📝 Pod logs for $svc:"
+              kubectl logs -l app=$svc --tail=50
+              exit 1
+        }
 
-                echo "🎉 Deployment verified successfully!"
+        for dep in product-service order-service; do
+          echo "⏳ Waiting for $dep rollout..."
+          kubectl rollout status deployment/$dep --timeout=300s || (kubectl get pods -o wide; exit 1)
+          check_health $dep
+        done
 
-
-
+        echo "🎉 All deployments verified successfully!"
 
 
   
