@@ -1,7 +1,7 @@
 name: CD - Deploy Backend Service to AKS
 
 on:
-push:
+ push:
     branches:
       - main
     workflow_dispatch:
