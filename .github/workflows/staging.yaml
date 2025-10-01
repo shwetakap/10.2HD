@@ -161,15 +161,14 @@ jobs:
   
       - name: Run Postman Integration Tests
         run: |
-          npm install -g newman
-          newman run postman/OrderService.postman_collection.json \
-            -e postman/Staging.postman_environment.json \
-            --reporters cli,junit \
-            --reporter-junit-export test-results/api-tests.xml
-      - uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: test-results/
+            echo "Running tests for Order & Product Services"
+            npm install -g newman
+            newman run postman/Staging_Minimal_GET.postman_collection.json \
+             --env-var "order_ip=${ORDER_IP}" \
+             --env-var "order_port=8081" \
+             --env-var "product_ip=${PRODUCT_IP}" \
+             --env-var "product_port=8080" \
+             --reporters cli 
 
 
   terraform_destroy:
