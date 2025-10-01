@@ -152,10 +152,10 @@ jobs:
 
             echo "✅ Testing order-service health..."
              
-             if ! curl --max-time 10 http://$ORDER_IP:8080/health | grep '"status":"ok"'; then
+            if ! curl --max-time 10 http://$ORDER_IP:8080/health | grep '"status":"ok"'; then
                echo "❌ Order service not healthy!"
                exit 1
-             fi
+            fi
 
              echo "🎉 All deployments verified successfully!"
 
