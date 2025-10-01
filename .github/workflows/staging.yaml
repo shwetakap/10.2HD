@@ -1,12 +1,11 @@
 name: Staging Deployment
 
-
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
-  workflow_run:
-    workflows: ["Backend CI - Test, Build, Scan and Push Images to ACR"]
-    types:
-      - completed
+
 env:
   TF_WORKING_DIR: ./infra
   RESOURCE_GROUP: sk-hd
@@ -78,12 +77,6 @@ jobs:
         run: |
           docker build -t ${{ env.ACR_NAME }}.azurecr.io/order-service:${{ env.IMAGE_TAG }} ./backend/order_service
           docker push ${{ env.ACR_NAME }}.azurecr.io/order-service:${{ env.IMAGE_TAG }}
-      
-      - name: Build & Push Customer Service
-        run: |
-          docker build -t ${{ env.ACR_NAME }}.azurecr.io/customer-service:${{ env.IMAGE_TAG }} ./backend/customer_service
-          docker push ${{ env.ACR_NAME }}.azurecr.io/customer-service:${{ env.IMAGE_TAG }}
-
 
   deploy_services:
     name: Deploy Backend Services to AKS
@@ -118,8 +111,6 @@ jobs:
           kubectl apply -f secrets.yaml
           kubectl apply -f product-db.yaml
           kubectl apply -f order-db.yaml
-          kubectl apply -f customer-db.yaml
-          kubectl apply -f customer-service.yaml
           kubectl apply -f product-service.yaml
           kubectl apply -f order-service.yaml
 
@@ -129,9 +120,6 @@ jobs:
             product-service-container=${{ env.ACR_NAME }}.azurecr.io/product-service:${{ env.IMAGE_TAG }}
           kubectl set image deployment/order-service \
             order-service-container=${{ env.ACR_NAME }}.azurecr.io/order-service:${{ env.IMAGE_TAG }}
-          kubectl set image deployment/customer-service \
-            order-service-container=${{ env.ACR_NAME }}.azurecr.io/customer-service:${{ env.IMAGE_TAG }}
-
 
       - name: Wait for deployments to complete
         run: |
@@ -139,28 +127,21 @@ jobs:
             kubectl rollout status deployment/product-service --timeout=300s
             echo "⏳ Waiting for order-service rollout..."
             kubectl rollout status deployment/order-service --timeout=300s
-            echo "⏳ Waiting for customer-service rollout..."
-            kubectl rollout status deployment/customer-service --timeout=300s
             # Wait for EXTERNAL-IP
             PRODUCT_IP=$(kubectl get svc product-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
             ORDER_IP=$(kubectl get svc order-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-            CUSTOMER_IP=$(kubectl get svc customer-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
             echo "🔗 Product Service IP: $PRODUCT_IP"
             echo "🔗 Order Service IP: $ORDER_IP"
-            echo "🔗 Customer Service IP: $CUSTOMER_IP"
 
-             until [ -n "$PRODUCT_IP" ] && [ -n "$ORDER_IP" ] && [ -n "$CUSTOMER_IP" ]; do
+             until [ -n "$PRODUCT_IP" ] && [ -n "$ORDER_IP" ]; do
                echo "⏳ Waiting for EXTERNAL-IP..."
                sleep 5
                 PRODUCT_IP=$(kubectl get svc product-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
                ORDER_IP=$(kubectl get svc order-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-               CUSTOMER_IP=$(kubectl get svc customer-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
              done
            
             echo "PRODUCT_IP=$PRODUCT_IP" >> $GITHUB_ENV
             echo "ORDER_IP=$ORDER_IP" >> $GITHUB_ENV
-            echo "CUSTOMER_IP=$CUSTOMER_IP" >> $GITHUB_ENV
-
 
              # Health checks
             echo "✅ Testing product-service health..."
@@ -176,20 +157,11 @@ jobs:
                exit 1
             fi
 
-             
-            echo "✅ Testing customer-service health..."
-            if ! curl --max-time 10 http://$CUSTOMER_IP:8080/health | grep '"status":"ok"'; then
-               echo "❌ Customer service not healthy!"
-               exit 1
-             fi
-  
-             
-             
              echo "🎉 All deployments verified successfully!"
   
       - name: Run Postman Integration Tests
         run: |
-            echo "Running tests for Order, Product and Customer Services"
+            echo "Running tests for Order & Product Services"
             npm install -g newman
             newman run postman/TestMicroService.postman_collection.json \
              --env-var "order_ip=${ORDER_IP}" \
