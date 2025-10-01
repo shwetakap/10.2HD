@@ -168,7 +168,7 @@ jobs:
             -e postman/Staging.postman_environment.json \
             --reporters cli,junit \
             --reporter-junit-export test-results/api-tests.xml
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: test-results/
