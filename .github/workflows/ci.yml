@@ -199,7 +199,7 @@ jobs:
         grype ${{ env.ACR_LOGIN_SERVER }}/order_service:${{ env.IMAGE_TAG }} -o json > product_service_vuln.json || true
 
 
-    # --- Customer Service ---
+    # --- Customer Service ---d
    # - name: Build and Push Customer Service Image
     #  run: |
      #   docker build -t ${{ env.ACR_LOGIN_SERVER }}/customer_service:${{ env.IMAGE_TAG }} ./backend/customer_service/
