@@ -30,9 +30,9 @@ jobs:
     environment: Production
 
     env:
-      AKS_CLUSTER_NAME: ${{ github.event.inputs.aks_cluster_name || 'sk10-aks' }}
-      AKS_RESOURCE_GROUP: ${{ github.event.inputs.aks_resource_group || 'sk10-rg' }}
-      AKS_ACR_NAME: ${{ github.event.inputs.aks_acr_name || 'sk10acr' }}
+      AKS_CLUSTER_NAME: ${{ github.event.inputs.aks_cluster_name || 'skhdaks' }}
+      AKS_RESOURCE_GROUP: ${{ github.event.inputs.aks_resource_group || 'sk-hd' }}
+      AKS_ACR_NAME: ${{ github.event.inputs.aks_acr_name || 'skhdaks' }}
       IMAGE_TAG: ${{ github.event.inputs.image_tag }}
 
     steps:
