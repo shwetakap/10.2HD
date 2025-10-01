@@ -111,21 +111,51 @@ jobs:
 
       - name: Wait for deployments to complete
         run: |
-          kubectl rollout status deployment/product-service --timeout=180s
-          kubectl rollout status deployment/order-service --timeout=180s
-          kubectl get pods
-          PRODUCT_IP=$(kubectl get svc product-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-          ORDER_IP=$(kubectl get svc order-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-          echo "🔗 Product Service IP: $PRODUCT_IP"
-          echo "🔗 Order Service IP: $ORDER_IP"
-          echo "✅ Testing product-service health..."
-          curl -f http://$PRODUCT_IP:8080/api/health || (echo "Product service not healthy!" && exit 1)
-          echo "✅ Testing order-service health..."
-          curl -f http://$ORDER_IP:8080/api/health || (echo "Order service not healthy!" && exit 1)
-          echo "🎉 Deployment verified successfully!"
+                set -e
+                echo "⏳ Waiting for product-service rollout..."
+                if ! kubectl rollout status deployment/product-service --timeout=300s; then
+                  echo "⚠️ Product-service rollout failed!"
+                  echo "📝 Pod status:"
+                  kubectl get pods -o wide
+                   echo "📝 Pod events:"
+                   kubectl describe pod -l app=product-service
+                   kubectl logs -l app=product-service --tail=50
+                   exit 1
+                fi
 
+                echo "⏳ Waiting for order-service rollout..."
+                if ! kubectl rollout status deployment/order-service --timeout=300s; then
+                   echo "⚠️ Order-service rollout failed!"
+                   echo "📝 Pod status:"
+                   kubectl get pods -o wide
+                   echo "📝 Pod events:"
+                   kubectl describe pod -l app=order-service
+                  kubectl logs -l app=order-service --tail=50
+                  exit 1
+                fi
 
+                echo "✅ All pods are running. Fetching service IPs..."
+                PRODUCT_IP=$(kubectl get svc product-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+                ORDER_IP=$(kubectl get svc order-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
+                echo "🔗 Product Service IP: $PRODUCT_IP"
+                echo "🔗 Order Service IP: $ORDER_IP"
+
+                echo "✅ Testing product-service health..."
+                if ! curl -f http://$PRODUCT_IP:8080/api/health; then
+                   echo "❌ Product service not healthy!"
+                    kubectl logs -l app=product-service --tail=50
+                   exit 1
+                fi
+
+                echo "✅ Testing order-service health..."
+                if ! curl -f http://$ORDER_IP:8080/api/health; then
+                 echo "❌ Order service not healthy!"
+                 kubectl logs -l app=order-service --tail=50
+                 exit 1
+                fi
+
+                echo "🎉 Deployment verified successfully!"
 
 
 
