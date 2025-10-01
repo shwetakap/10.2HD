@@ -1,43 +1,73 @@
-🛠️ E-Commerce Microservices – DevOps CI/CD Pipeline
+# 🚀 DevOps Project: Automated CI/CD Pipeline with Azure AKS
 
-This repository contains a microservices-based e-commerce backend with a fully automated CI/CD pipeline implemented using GitHub Actions, Terraform, and Azure Kubernetes Service (AKS).
+This project demonstrates a full **DevOps CI/CD pipeline** implementation for a containerized application using **GitHub Actions, Docker, Terraform, SonarCloud, Snyk, and Azure Kubernetes Service (AKS)**.  
 
-The project demonstrates modern DevOps practices: automated testing, quality and security scanning, containerization, staging deployment, production deployment, and supply chain transparency with SBOM generation.
+It covers the complete lifecycle:  
+- Continuous Integration (**Build, Test, Scan, Push**)  
+- Continuous Deployment (**Staging → Production**)  
+- Infrastructure as Code with **Terraform**  
+- Monitoring & Scaling (**AKS + HPA**)  
 
-🚀 Features Implemented
-🔹 CI Pipeline (ci.yaml)
+---
 
-Runs unit tests with pytest for Product, Order, and Customer services.
+## 📌 Features Implemented
 
-Performs SonarQube analysis for code quality.
+1. **Continuous Integration (CI)**
+   - Automated build of Docker images.
+   - Unit testing with `pytest`.
+   - Code quality analysis with **SonarCloud**.
+   - Security vulnerability scanning with **Snyk** and **Grype/Syft**.
+   - Push built images to **Azure Container Registry (ACR)**.
 
-Executes Snyk vulnerability scans.
+2. **Staging Deployment**
+   - Infrastructure provisioning with **Terraform** on Azure.
+   - Deployment of application to **staging AKS environment**.
+   - Postman API tests to validate functionality.
+   - Automated cleanup (`terraform destroy`) after pipeline completion.
 
-Builds Docker images for all services.
+3. **Production Deployment**
+   - Manual approval step before production release.
+   - Deployment of application to **production AKS** using `docker-compose.prod.yml`.
+   - Integration with monitoring tools (**New Relic / Datadog**) for observability.
 
-Pushes images to Azure Container Registry (ACR).
+4. **Monitoring & Scaling**
+   - Configured **Horizontal Pod Autoscaler (HPA)** to scale services based on CPU/memory usage.
+   - Demonstrates auto-scaling under load conditions.
 
-Generates SBOMs with Syft and scans for vulnerabilities with Grype.
+---
 
-🔹 Staging Deployment (staging.yaml)
+## ⚙️ Tech Stack
 
-Provisions infrastructure dynamically with Terraform.
+- **Languages/Frameworks**: Python, Node.js (MERN)
+- **CI/CD**: GitHub Actions
+- **Containerization**: Docker, Docker Compose
+- **Infrastructure**: Terraform (Azure AKS + ACR)
+- **Testing**: Pytest, Postman (integration tests)
+- **Code Quality & Security**: SonarCloud, Snyk, Grype, Syft
+- **Monitoring**: New Relic / Datadog
+- **Secrets Management**: GitHub Secrets
 
-Deploys microservices to staging AKS environment.
+---
 
-Runs acceptance tests using Postman/Newman.
+## 🔑 GitHub Secrets Required
 
-Destroys staging environment automatically after validation.
+Add these secrets in your GitHub repository settings:
 
-🔹 Production Deployment (prod.yaml)
+| Secret Name            | Purpose                                         |
+|-------------------------|-------------------------------------------------|
+| `AZURE_CREDENTIALS`    | Service principal JSON for Terraform + AKS auth |
+| `ACR_NAME`             | Azure Container Registry name                   |
+| `SONAR_TOKEN`          | Authentication token for SonarCloud             |
+| `SONAR_HOST_URL`       | SonarCloud instance URL (e.g., `https://sonarcloud.io`) |
+| `SNYK_TOKEN`           | Token for Snyk security scans                   |
+| `NEW_RELIC_LICENSE_KEY`| API key for New Relic monitoring                |
 
-Deploys CI-tested images to production AKS cluster.
+---
 
-Dynamically injects image tags into Kubernetes manifests.
+## 📂 Project Structure
 
-Performs smoke tests to verify service availability.
-
-📂 Project Structure
+```bash
+.
 ├── backend/
 │   ├── product_service/
 │   ├── order_service/
@@ -56,45 +86,3 @@ Performs smoke tests to verify service availability.
 │   ├── staging.yaml
 │   └── prod.yaml
 └── README.md
-
-
-🛠️ Tools & Technologies
-
-Languages & Frameworks: Python, FastAPI, pytest
-
-Version Control & CI/CD: GitHub Actions
-
-Containerization: Docker, Azure Container Registry
-
-Infrastructure as Code: Terraform
-
-Orchestration: Kubernetes (AKS)
-
-Testing: pytest, Postman/Newman
-
-Security & Quality: SonarQube, Snyk, Syft, Grype
-
-🔑 Required GitHub Secrets
-
-Add the following secrets to your repository for pipelines to work:
-
-Secret	Description
-AZURE_CREDENTIALS	JSON output of az ad sp create-for-rbac (for login)
-AZURE_CLIENT_ID	Service Principal App ID
-AZURE_CLIENT_SECRET	Service Principal password
-AZURE_TENANT_ID	Azure Tenant ID
-AZURE_SUBSCRIPTION_ID	Azure Subscription ID
-SONAR_TOKEN	SonarQube authentication token
-SONAR_HOST_URL	SonarQube server URL
-SNYK_TOKEN	Snyk authentication token
-▶️ How to Run
-
-Fork or clone this repo.
-
-Add GitHub secrets listed above.
-
-Push changes to the testing branch → triggers CI pipeline.
-
-Merge into main → triggers production deployment.
-
-Optionally, trigger staging deployment manually for acceptance testing.
