@@ -163,7 +163,7 @@ jobs:
         run: |
             echo "Running tests for Order & Product Services"
             npm install -g newman
-            newman run postman/.postman_collection.json \
+            newman run postman/TestMicroService.postman_collection.json \
              --env-var "order_ip=${ORDER_IP}" \
              --env-var "order_port=8081" \
              --env-var "product_ip=${PRODUCT_IP}" \
