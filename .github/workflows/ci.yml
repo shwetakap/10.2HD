@@ -3,7 +3,7 @@ name: Backend CI - Test, Build, Scan and Push Images to ACR
 on:
   push:
     branches:
-      - main
+      - testing
   workflow_dispatch:
 
 env:
@@ -89,6 +89,18 @@ jobs:
           POSTGRES_PASSWORD: postgres
         run: pytest tests --maxfail=1 --disable-warnings -q
 
+
+      - name: Run customer_service tests
+        working-directory: backend/customer_service
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5433
+          POSTGRES_DB: orders
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        run: pytest tests --maxfail=1 --disable-warnings -q
+
+   
    
 
   # ---------------------------
@@ -140,6 +152,10 @@ jobs:
         run: |
           cd backend/product_service
           snyk test --json  --skip-unresolved > ../../product_service_snyk.json
+          cd backend/order_service
+          snyk test --json  --skip-unresolved > ../../order_service_snyk.json
+          cd backend/customer_service
+          snyk test --json  --skip-unresolved > ../../customer_service_snyk.json
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
@@ -149,6 +165,8 @@ jobs:
           name: snyk-reports
           path: |
             product_service_snyk.json
+            order_service_snyk.json
+            customer_service_snyk.json
 
   # ---------------------------
   # Stage 4: Build and Push Docker Images + SBOM
@@ -199,16 +217,16 @@ jobs:
         grype ${{ env.ACR_LOGIN_SERVER }}/order_service:${{ env.IMAGE_TAG }} -o json > product_service_vuln.json || true
 
 
-    # --- Customer Service ---d
-   # - name: Build and Push Customer Service Image
-    #  run: |
-     #   docker build -t ${{ env.ACR_LOGIN_SERVER }}/customer_service:${{ env.IMAGE_TAG }} ./backend/customer_service/
-      #  docker push ${{ env.ACR_LOGIN_SERVER }}/customer_service:${{ env.IMAGE_TAG }}
+    # --- Customer Service ---
+    - name: Build and Push Customer Service Image
+      run: |
+        docker build -t ${{ env.ACR_LOGIN_SERVER }}/customer_service:${{ env.IMAGE_TAG }} ./backend/customer_service/
+        docker push ${{ env.ACR_LOGIN_SERVER }}/customer_service:${{ env.IMAGE_TAG }}
 
-    #- name: SBOM & Vulnerability Scan - Customer Service
-     # run: |
-      #  syft ${{ env.ACR_LOGIN_SERVER }}/customer_service:${{ env.IMAGE_TAG }} -o json > customer_service_sbom.json
-       # grype ${{ env.ACR_LOGIN_SERVER }}/customer_service:${{ env.IMAGE_TAG }} --fail-on critical
+    - name: SBOM & Vulnerability Scan - Customer Service
+      run: |
+        syft ${{ env.ACR_LOGIN_SERVER }}/customer_service:${{ env.IMAGE_TAG }} -o json > customer_service_sbom.json
+        grype ${{ env.ACR_LOGIN_SERVER }}/customer_service:${{ env.IMAGE_TAG }} > customer_service_vuln.json || true
 
     - name: Set IMAGE_TAG output
       id: set_image_tag
